@@ -1,0 +1,25 @@
+#  ____  _            _______ _          _____
+# |  _ \| |          |__   __| |        |  __ \
+# | |_) | | __ _ _______| |  | |__   ___| |  | | _____   __
+# |  _ <| |/ _` |_  / _ \ |  | '_ \ / _ \ |  | |/ _ \ \ / /
+# | |_) | | (_| |/ /  __/ |  | | | |  __/ |__| |  __/\ V /
+# |____/|_|\__,_/___\___|_|  |_| |_|\___|_____/ \___| \_/
+
+# BlazinHud Configuration File:
+#  Variables:
+#   - {line} to go to the next line
+#   - {max_players} to get the max players
+#   - {online_players} to get the online player count
+#   - & for color coding
+#   - {x} to get the player's x position
+#   - {y} to get the player's y position
+#   - {z} to get the player's z position
+#   - {level} to get the player's level
+#   - {tps} to get the ticks per second
+#   - {motd} to get the message of the day
+
+#  Default Config:
+#    hud-message: "&bBlazinHud &aby &6BlazeTheDev&r {line} &c{online_players}&f/&c{max_players}"
+
+# The below config is the hud message that will be displayed above your hotbar
+hud-message: "&bBlazinHud &aby &6BlazeTheDev&r {line} &c{online_players}&f/&c{max_players}"
