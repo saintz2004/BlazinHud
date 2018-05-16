@@ -32,6 +32,7 @@ class HudTask extends PluginTask{
     public function onRun(int $tick) : void{
         $hud = BlazinHud::getInstance()->getConfig()->get("hud-message");
         foreach(BlazinHud::getInstance()->getServer()->getOnlinePlayers() as $player){
+            if(!in_array($player->getName(), BlazinHud::getInstance()->hud)) return;
             $hud = str_replace([
                 "{line}",
                 "{max_players}",
@@ -43,6 +44,7 @@ class HudTask extends PluginTask{
                 "{level}",
                 "{tps}",
                 "{motd}",
+                "{money}"
             ], [
                 "\n",
                 BlazinHud::getInstance()->getServer()->getMaxPlayers(),
@@ -53,7 +55,8 @@ class HudTask extends PluginTask{
                 (string)round($player->getZ()),
                 $player->getLevel()->getName(),
                 BlazinHud::getInstance()->getServer()->getTicksPerSecond(),
-                BlazinHud::getInstance()->getServer()->getMotd()
+                BlazinHud::getInstance()->getServer()->getMotd(),
+                BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player)
             ], $hud);
             $player->sendPopup($hud);
         }

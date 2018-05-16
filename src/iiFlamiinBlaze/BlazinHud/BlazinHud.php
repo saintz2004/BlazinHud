@@ -33,22 +33,26 @@ use pocketmine\utils\TextFormat;
 
 class BlazinHud extends PluginBase implements Listener{
 
-    const VERSION = "v1.0.1";
+    const VERSION = "v1.0.3";
     const PREFIX = TextFormat::AQUA . "BlazinHud" . TextFormat::GOLD . " > ";
 
     /** @var self $instance */
     private static $instance;
+    /** @var array $hud */
+    public $hud = [];
 
     public function onEnable() : void{
         self::$instance = $this;
-        $this->getLogger()->info("BlazinHud " . self::VERSION . " by iiFlamiinBlaze is enabled");
         @mkdir($this->getDataFolder());
         $this->saveDefaultConfig();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
+        $this->economyCheck();
+        $this->getLogger()->info("BlazinHud " . self::VERSION . " by iiFlamiinBlaze is enabled");
     }
 
     public function onJoin(PlayerJoinEvent $event) : void{
         $this->multiWorldCheck($event->getPlayer());
+        $this->hud[] = $event->getPlayer()->getName();
     }
 
     public function onLevelChange(EntityLevelChangeEvent $event) : void{
@@ -71,6 +75,17 @@ class BlazinHud extends PluginBase implements Listener{
         return true;
     }
 
+    private function economyCheck() : bool{
+        if($this->getConfig()->get("economy") === "on"){
+            if($this->getServer()->getPluginManager()->getPlugin("EconomyAPI") === null){
+                $this->getPluginLoader()->disablePlugin($this);
+                $this->getLogger()->error(TextFormat::RED . "Plugin Disabled! Please turn off economy support in the config or enable/install EconomyAPI");
+                return false;
+            }
+        }elseif($this->getConfig()->get("economy") === "off") return false;
+        return true;
+    }
+
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
         if($command->getName() === "blazinhud"){
             if(!$sender instanceof Player){
@@ -82,7 +97,7 @@ class BlazinHud extends PluginBase implements Listener{
                 return false;
             }
             if(empty($args)){
-                $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload> <hud | multiworld> <message>");
+                $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
                 return false;
             }
             switch($args[0]){
@@ -94,6 +109,24 @@ class BlazinHud extends PluginBase implements Listener{
                                 TextFormat::GREEN . "Description: " . TextFormat::AQUA . "Allows you to customize a message that will pop up above your hotbar",
                                 TextFormat::DARK_GRAY . "-===============================-"] as $msg) $sender->sendMessage($msg);
 
+                    return true;
+                case "on":
+                    if(!in_array($sender->getName(), $this->hud)){
+                        $this->hud[] = $sender->getName();
+                        $sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have turned on your hud");
+                    }elseif(in_array($sender->getName(), $this->hud)){
+                        $sender->sendMessage(self::PREFIX . TextFormat::RED . "Your hud is already on");
+                        return false;
+                    }
+                    return true;
+                case "off":
+                    if(in_array($sender->getName(), $this->hud)){
+                        unset($this->hud[array_search($sender->getName(), $this->hud)]);
+                        $sender->sendMessage(self::PREFIX . TextFormat::RED . "You have turned off your hud");
+                    }elseif(!in_array($sender->getName(), $this->hud)){
+                        $sender->sendMessage(self::PREFIX . TextFormat::RED . "Your hud is already off");
+                        return false;
+                    }
                     return true;
                 case "set":
                     if($args[1]){
@@ -110,7 +143,7 @@ class BlazinHud extends PluginBase implements Listener{
                                         return false;
                                     }
                                 }else{
-                                    $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload> <hud | multiworld> <message>");
+                                    $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
                                     return false;
                                 }
                             case "multiworld":
@@ -131,11 +164,11 @@ class BlazinHud extends PluginBase implements Listener{
                                 }
                                 return false;
                             default:
-                                $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload> <hud | multiworld> <message>");
+                                $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
                                 return false;
                         }
                     }else{
-                        $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload> <hud | multiworld> <message>");
+                        $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
                         return false;
                     }
                 case "reload":
@@ -144,7 +177,7 @@ class BlazinHud extends PluginBase implements Listener{
                     $sender->sendMessage(self::PREFIX . TextFormat::GREEN . "BlazinHud successfully reloaded");
                     return true;
                 default:
-                    $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload> <hud | multiworld> <message>");
+                    $sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
                     return true;
             }
         }
