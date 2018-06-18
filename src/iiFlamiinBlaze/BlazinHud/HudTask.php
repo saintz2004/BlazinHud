@@ -21,44 +21,40 @@ declare(strict_types=1);
 
 namespace iiFlamiinBlaze\BlazinHud;
 
-use pocketmine\scheduler\PluginTask;
+use pocketmine\scheduler\Task;
 
-class HudTask extends PluginTask{
+class HudTask extends Task{
 
-    public function __construct(BlazinHud $main){
-        parent::__construct($main);
-    }
-
-    public function onRun(int $tick) : void{
-        $hud = BlazinHud::getInstance()->getConfig()->get("hud-message");
-        foreach(BlazinHud::getInstance()->getServer()->getOnlinePlayers() as $player){
-            if(!in_array($player->getName(), BlazinHud::getInstance()->hud)) return;
-            $hud = str_replace([
-                "{line}",
-                "{max_players}",
-                "{online_players}",
-                "&",
-                "{x}",
-                "{y}",
-                "{z}",
-                "{level}",
-                "{tps}",
-                "{motd}",
-                "{money}"
-            ], [
-                "\n",
-                BlazinHud::getInstance()->getServer()->getMaxPlayers(),
-                count(BlazinHud::getInstance()->getServer()->getOnlinePlayers()),
-                "§",
-                (string)round($player->getX()),
-                (string)round($player->getY()),
-                (string)round($player->getZ()),
-                $player->getLevel()->getName(),
-                BlazinHud::getInstance()->getServer()->getTicksPerSecond(),
-                BlazinHud::getInstance()->getServer()->getMotd(),
-                BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player)
-            ], $hud);
-            $player->sendPopup($hud);
-        }
-    }
+	public function onRun(int $tick) : void{
+		$hud = BlazinHud::getInstance()->getConfig()->get("hud-message");
+		foreach(BlazinHud::getInstance()->getServer()->getOnlinePlayers() as $player){
+			if(!in_array($player->getName(), BlazinHud::getInstance()->hud)) return;
+			$hud = str_replace([
+				"{line}",
+				"{max_players}",
+				"{online_players}",
+				"&",
+				"{x}",
+				"{y}",
+				"{z}",
+				"{level}",
+				"{tps}",
+				"{motd}",
+				"{money}"
+			], [
+				"\n",
+				BlazinHud::getInstance()->getServer()->getMaxPlayers(),
+				count(BlazinHud::getInstance()->getServer()->getOnlinePlayers()),
+				"§",
+				(string)round($player->getX()),
+				(string)round($player->getY()),
+				(string)round($player->getZ()),
+				$player->getLevel()->getName(),
+				BlazinHud::getInstance()->getServer()->getTicksPerSecond(),
+				BlazinHud::getInstance()->getServer()->getMotd(),
+				BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player)
+			], $hud);
+			$player->sendPopup($hud);
+		}
+	}
 }
