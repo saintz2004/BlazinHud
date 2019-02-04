@@ -40,7 +40,8 @@ class HudTask extends Task{
 				"{level}",
 				"{tps}",
 				"{motd}",
-				"{money}"
+				"{money}",
+				"{player}"
 			], [
 				"\n",
 				BlazinHud::getInstance()->getServer()->getMaxPlayers(),
@@ -52,7 +53,8 @@ class HudTask extends Task{
 				$player->getLevel()->getName(),
 				BlazinHud::getInstance()->getServer()->getTicksPerSecond(),
 				BlazinHud::getInstance()->getServer()->getMotd(),
-				BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player)
+				BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player),
+				$player->getName()
 			], $hud);
 			$player->sendPopup($hud);
 		}

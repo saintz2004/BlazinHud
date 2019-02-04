@@ -18,6 +18,7 @@
 #   - {tps} to get the ticks per second
 #   - {motd} to get the message of the day
 #   - {money} to get the player's money
+#   - {player} to get the player's name
 
 #  Default Config:
 #    hud-message: "&bBlazinHud &aby &6BlazeTheDev&r {line} &c{online_players}&f/&c{max_players}"
