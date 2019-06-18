@@ -7,7 +7,7 @@
  * | |_) | | (_| |/ /  __/ |  | | | |  __/ |__| |  __/\ V /
  * |____/|_|\__,_/___\___|_|  |_| |_|\___|_____/ \___| \_/
  *
- * Copyright (C) 2018 iiFlamiinBlaze
+ * Copyright (C) 2019 iiFlamiinBlaze
  *
  * iiFlamiinBlaze's plugins are licensed under MIT license!
  * Made by iiFlamiinBlaze for the PocketMine-MP Community!
@@ -33,11 +33,11 @@ use pocketmine\utils\TextFormat;
 
 class BlazinHud extends PluginBase implements Listener{
 
-	const VERSION = "v1.0.4";
+	const VERSION = "v1.0.5";
 	const PREFIX = TextFormat::AQUA . "BlazinHud" . TextFormat::GOLD . " > ";
 
 	/** @var self $instance */
-	private static $instance;
+	protected static $instance;
 	/** @var array $hud */
 	public $hud = [];
 
@@ -52,30 +52,30 @@ class BlazinHud extends PluginBase implements Listener{
 
 	public function onJoin(PlayerJoinEvent $event) : void{
 		$this->multiWorldCheck($event->getPlayer());
-		$this->hud[] = $event->getPlayer()->getName();
+		$this->hud[$event->getPlayer()->getName()] = true;
 	}
 
 	public function onLevelChange(EntityLevelChangeEvent $event) : void{
 		$this->multiWorldCheck($event->getEntity());
 	}
 
-	private function multiWorldCheck(Entity $entity) : bool{
+	protected function multiWorldCheck(Entity $entity) : bool{
 		if(!$entity instanceof Player) return false;
 		if($this->getConfig()->get("multi-world") === "on"){
 			if(in_array($entity->getLevel()->getName(), $this->getConfig()->get("worlds"))){
-				$this->getScheduler()->scheduleRepeatingTask(new HudTask(), 30);
+				$this->getScheduler()->scheduleRepeatingTask(new HudTask($entity), 30);
 			}else{
 				$entity->sendMessage(self::PREFIX . TextFormat::RED . "You are not in the right world for your hud to appear");
 				return false;
 			}
 		}elseif($this->getConfig()->get("multi-world") === "off"){
-			$this->getScheduler()->scheduleRepeatingTask(new HudTask(), 30);
+			$this->getScheduler()->scheduleRepeatingTask(new HudTask($entity), 30);
 			return false;
 		}
 		return true;
 	}
 
-	private function economyCheck() : bool{
+	protected function economyCheck() : bool{
 		if($this->getConfig()->get("economy") === "on"){
 			if($this->getServer()->getPluginManager()->getPlugin("EconomyAPI") === null){
 				$this->getServer()->getPluginManager()->disablePlugin($this);
@@ -96,7 +96,7 @@ class BlazinHud extends PluginBase implements Listener{
 				$sender->sendMessage(self::PREFIX . TextFormat::RED . "You do not have permission to use this command");
 				return false;
 			}
-			if(empty($args)){
+			if(empty($args[0])){
 				$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
 				return false;
 			}
@@ -109,76 +109,77 @@ class BlazinHud extends PluginBase implements Listener{
 								TextFormat::GREEN . "Description: " . TextFormat::AQUA . "Allows you to customize a message that will pop up above your hotbar",
 								TextFormat::DARK_GRAY . "-===============================-"] as $msg) $sender->sendMessage($msg);
 
-					return true;
+					break;
 				case "on":
-					if(!in_array($sender->getName(), $this->hud)){
-						$this->hud[] = $sender->getName();
+					if(!isset($this->hud[$sender->getName()])){
+						$this->hud[$sender->getName()] = true;
 						$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have turned on your hud");
-					}elseif(in_array($sender->getName(), $this->hud)){
+					}elseif(isset($this->hud[$sender->getName()])){
 						$sender->sendMessage(self::PREFIX . TextFormat::RED . "Your hud is already on");
 						return false;
 					}
-					return true;
+					break;
 				case "off":
-					if(in_array($sender->getName(), $this->hud)){
-						unset($this->hud[array_search($sender->getName(), $this->hud)]);
+					if(isset($this->hud[$sender->getName()])){
+						unset($this->hud[$sender->getName()]);
 						$sender->sendMessage(self::PREFIX . TextFormat::RED . "You have turned off your hud");
-					}elseif(!in_array($sender->getName(), $this->hud)){
+					}elseif(!isset($this->hud[$sender->getName()])){
 						$sender->sendMessage(self::PREFIX . TextFormat::RED . "Your hud is already off");
 						return false;
 					}
-					return true;
+					break;
 				case "set":
-					if($args[1]){
-						switch($args[1]){
-							case "hud":
-								if($args[2]){
-									if(is_string($args[2])){
-										$this->getConfig()->set("hud-message", $args[2]);
-										$this->getConfig()->save();
-										$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully set the hud to $args[2]");
-										return true;
-									}else{
-										$sender->sendMessage(self::PREFIX . TextFormat::RED . "Please enter a string to set the hud too");
-										return false;
-									}
-								}else{
-									$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
-									return false;
-								}
-							case "multiworld":
-								if($args[2]){
-									switch($args[2]){
-										case "on":
-											$this->getConfig()->set("multiworld", "on");
-											$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully turned multiworld on");
-											return true;
-										case "off":
-											$this->getConfig()->set("multiworld", "off");
-											$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully turned multiworld off");
-											return true;
-										default:
-											$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: " . TextFormat::GREEN . "/blazinhud multiworld " . TextFormat::RED . "on | off");
-											return false;
-									}
-								}
-								return false;
-							default:
-								$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
-								return false;
-						}
-					}else{
-						$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
+					if(empty($args[1])){
+						$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud set <hud | multiworld> <message>");
 						return false;
 					}
+					switch($args[1]){
+						case "hud":
+							if(empty($args[2])){
+								$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud set hud <message>");
+								return false;
+							}
+							if(is_string($args[2])){
+								$this->getConfig()->set("hud-message", $args[2]);
+								$this->getConfig()->save();
+								$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully set the hud to $args[2]");
+							}else{
+								$sender->sendMessage(self::PREFIX . TextFormat::RED . "Please enter a string to set the hud too");
+								return false;
+							}
+							break;
+						case "multiworld":
+							if(empty($args[2])){
+								$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud set multiworld <on | off>");
+								return false;
+							}
+							switch($args[2]){
+								case "on":
+									$this->getConfig()->set("multiworld", "on");
+									$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully turned multiworld on");
+									break;
+								case "off":
+									$this->getConfig()->set("multiworld", "off");
+									$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "You have successfully turned multiworld off");
+									break;
+								default:
+									$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud set multiworld <on | off>");
+									break;
+							}
+							break;
+						default:
+							$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
+							break;
+					}
+					break;
 				case "reload":
 					$this->getConfig()->save();
 					$this->getConfig()->reload();
 					$sender->sendMessage(self::PREFIX . TextFormat::GREEN . "BlazinHud successfully reloaded");
-					return true;
+					break;
 				default:
 					$sender->sendMessage(self::PREFIX . TextFormat::GRAY . "Usage: /blazinhud <info | set | reload | on | off> <hud | multiworld> <message>");
-					return true;
+					break;
 			}
 		}
 		return true;

@@ -1,6 +1,6 @@
 name: BlazinHud
 author: iiFlamiinBlaze
-version: 1.0.4
+version: 1.0.5
 description: An advanced custom hud plugin
 main: iiFlamiinBlaze\BlazinHud\BlazinHud
 api: 3.0.0

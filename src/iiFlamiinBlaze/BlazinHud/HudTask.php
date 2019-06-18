@@ -7,7 +7,7 @@
  * | |_) | | (_| |/ /  __/ |  | | | |  __/ |__| |  __/\ V /
  * |____/|_|\__,_/___\___|_|  |_| |_|\___|_____/ \___| \_/
  *
- * Copyright (C) 2018 iiFlamiinBlaze
+ * Copyright (C) 2019 iiFlamiinBlaze
  *
  * iiFlamiinBlaze's plugins are licensed under MIT license!
  * Made by iiFlamiinBlaze for the PocketMine-MP Community!
@@ -21,14 +21,21 @@ declare(strict_types=1);
 
 namespace iiFlamiinBlaze\BlazinHud;
 
+use pocketmine\Player;
 use pocketmine\scheduler\Task;
 
 class HudTask extends Task{
 
+	/** @var Player $player */
+	protected $player;
+
+	public function __construct(Player $player){
+		$this->player = $player;
+	}
+
 	public function onRun(int $tick) : void{
 		$hud = BlazinHud::getInstance()->getConfig()->get("hud-message");
-		foreach(BlazinHud::getInstance()->getServer()->getOnlinePlayers() as $player){
-			if(!in_array($player->getName(), BlazinHud::getInstance()->hud)) return;
+		if(isset(BlazinHud::getInstance()->hud[$this->player->getName()])){
 			$hud = str_replace([
 				"{line}",
 				"{max_players}",
@@ -41,22 +48,22 @@ class HudTask extends Task{
 				"{tps}",
 				"{motd}",
 				"{money}",
-				"{player}"
+				"{player}",
 			], [
 				"\n",
 				BlazinHud::getInstance()->getServer()->getMaxPlayers(),
 				count(BlazinHud::getInstance()->getServer()->getOnlinePlayers()),
 				"§",
-				(string)round($player->getX()),
-				(string)round($player->getY()),
-				(string)round($player->getZ()),
-				$player->getLevel()->getName(),
+				(string)round($this->player->getX()),
+				(string)round($this->player->getY()),
+				(string)round($this->player->getZ()),
+				$this->player->getLevel()->getName(),
 				BlazinHud::getInstance()->getServer()->getTicksPerSecond(),
 				BlazinHud::getInstance()->getServer()->getMotd(),
-				BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($player),
-				$player->getName()
+				BlazinHud::getInstance()->getServer()->getPluginManager()->getPlugin("EconomyAPI")->getInstance()->myMoney($this->player),
+				$this->player->getName()
 			], $hud);
-			$player->sendPopup($hud);
+			$this->player->sendPopup($hud);
 		}
 	}
 }
